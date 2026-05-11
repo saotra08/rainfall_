@@ -1,0 +1,4 @@
+*.o
+*.env
+!.env.example
+AGENTS.md

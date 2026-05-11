@@ -1,0 +1,8 @@
+*
+!*.sh
+
+# START TEMPORARY EXCLUDES
+!ssh/config
+!level?/Resources/pass
+!bonus?/Resources/pass
+# END TEMPORARY EXCLUDES

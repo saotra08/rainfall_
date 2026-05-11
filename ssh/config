@@ -1,0 +1,83 @@
+Host l0
+    HostName TARGET_IP
+    User level0
+    Port 4242
+    StrictHostKeyChecking no
+
+Host l1
+    HostName TARGET_IP
+    User level1
+    Port 4242
+    StrictHostKeyChecking no
+
+Host l2
+    HostName TARGET_IP
+    User level2
+    Port 4242
+    StrictHostKeyChecking no
+
+Host l3
+    HostName TARGET_IP
+    User level3
+    Port 4242
+    StrictHostKeyChecking no
+
+Host l4
+    HostName TARGET_IP
+    User level4
+    Port 4242
+    StrictHostKeyChecking no
+
+Host l5
+    HostName TARGET_IP
+    User level5
+    Port 4242
+    StrictHostKeyChecking no
+
+Host l6
+    HostName TARGET_IP
+    User level6
+    Port 4242
+    StrictHostKeyChecking no
+
+Host l7
+    HostName TARGET_IP
+    User level7
+    Port 4242
+    StrictHostKeyChecking no
+
+Host l8
+    HostName TARGET_IP
+    User level8
+    Port 4242
+    StrictHostKeyChecking no
+
+Host l9
+    HostName TARGET_IP
+    User level9
+    Port 4242
+    StrictHostKeyChecking no
+
+Host b0
+    HostName TARGET_IP
+    User bonus0
+    Port 4242
+    StrictHostKeyChecking no
+
+Host b1
+    HostName TARGET_IP
+    User bonus1
+    Port 4242
+    StrictHostKeyChecking no
+
+Host b2
+    HostName TARGET_IP
+    User bonus2
+    Port 4242
+    StrictHostKeyChecking no
+
+Host b3
+    HostName TARGET_IP
+    User bonus3
+    Port 4242
+    StrictHostKeyChecking no
