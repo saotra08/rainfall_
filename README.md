@@ -109,11 +109,7 @@ Copy the example environment file and set the IP of your target VM:
 cp .env.example .env
 ```
 
-Edit `.env` and set the correct IP address:
-
-```
-TARGET_IP=172.16.39.128
-```
+Edit `.env` and set the correct IP address with the IP on the VM
 
 If you need to find the IP, log into the VM with the starting credentials and run `ifconfig`.
 
