@@ -1,4 +1,4 @@
-# Waltrough
+# Walktrough
 
 ```sh
 # list the directory contents
