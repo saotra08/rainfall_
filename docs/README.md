@@ -14,6 +14,7 @@ New level folders are created **one at a time as we reach them**, from the templ
 
 | Lesson | Topic | Levels it covers |
 |---|---|---|
+| [`lessons/level-map.md`](lessons/level-map.md) | Breach + technique per level (orientation map, no answers) | **all** |
 | [`lessons/00-toolkit.md`](lessons/00-toolkit.md) | Recon loop, i386/stack/cdecl fundamentals, gdb, checksec, payload delivery | **all** |
 | [`lessons/01-stack-overflow.md`](lessons/01-stack-overflow.md) | Overflow a variable / saved return address | level0, level1, level2, level9 |
 | [`lessons/02-format-string.md`](lessons/02-format-string.md) | `%x` reads, `%n` arbitrary write, variable/GOT overwrite | level3, level4, level5, level8, bonus0 |

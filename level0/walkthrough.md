@@ -11,6 +11,11 @@ dr-x--x--x  1 root   root      340 Sep 23  2015 ..
 -rwsr-x---+ 1 level1 users  747441 Mar  6  2016 level0
 -rw-r--r--  1 level0 level0    675 Apr  3  2012 .profile
 
+# check security features on binary
+level0@RainFall:~$ checksec --file /home/user/level0/level0
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+No RELRO        No canary found   NX enabled    No PIE          No RPATH   No RUNPATH   /home/user/level0/level0
+
 # test the binary
 level0@RainFall:~$ ./level0 
 Segmentation fault (core dumped)
