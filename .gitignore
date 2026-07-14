@@ -1,4 +1,5 @@
 *.o
+*.out
 *.env
 !.env.example
 AGENTS.md

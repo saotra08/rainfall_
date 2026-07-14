@@ -43,68 +43,72 @@ For bug reporting instructions, please see:
 <http://bugs.launchpad.net/gdb-linaro/>...
 Reading symbols from /home/user/level0/level0...(no debugging symbols found)...done.
 
+# set assembly syntax into intel (better reading)
+(gdb) set disassembly-flavor intel
+
 # disassemble the main program
-(gdb) disas /r main
+(gdb) disassemble main
 Dump of assembler code for function main:
-   0x08048ec0 <+0>:     55      push   %ebp
-   0x08048ec1 <+1>:     89 e5   mov    %esp,%ebp
-   0x08048ec3 <+3>:     83 e4 f0        and    $0xfffffff0,%esp
-   0x08048ec6 <+6>:     83 ec 20        sub    $0x20,%esp
-   0x08048ec9 <+9>:     8b 45 0c        mov    0xc(%ebp),%eax
-   0x08048ecc <+12>:    83 c0 04        add    $0x4,%eax
-   0x08048ecf <+15>:    8b 00   mov    (%eax),%eax
-   0x08048ed1 <+17>:    89 04 24        mov    %eax,(%esp)
-   0x08048ed4 <+20>:    e8 37 08 00 00  call   0x8049710 <atoi>
+   0x08048ec0 <+0>:     push   ebp
+   0x08048ec1 <+1>:     mov    ebp,esp
+   0x08048ec3 <+3>:     and    esp,0xfffffff0
+   0x08048ec6 <+6>:     sub    esp,0x20
+   0x08048ec9 <+9>:     mov    eax,DWORD PTR [ebp+0xc]
+   0x08048ecc <+12>:    add    eax,0x4
+   0x08048ecf <+15>:    mov    eax,DWORD PTR [eax]
+   0x08048ed1 <+17>:    mov    DWORD PTR [esp],eax
+   0x08048ed4 <+20>:    call   0x8049710 <atoi>
 
 # compare the args to $0x1a7
-   0x08048ed9 <+25>:    3d a7 01 00 00  cmp    $0x1a7,%eax
-   0x08048ede <+30>:    75 78   jne    0x8048f58 <main+152> # it says to jump to <main+152> if the arg is not $0x1a7
-   0x08048ee0 <+32>:    c7 04 24 48 53 0c 08    movl   $0x80c5348,(%esp)
-   0x08048ee7 <+39>:    e8 04 7d 00 00  call   0x8050bf0 <strdup>
-   0x08048eec <+44>:    89 44 24 10     mov    %eax,0x10(%esp)
-   0x08048ef0 <+48>:    c7 44 24 14 00 00 00 00 movl   $0x0,0x14(%esp)
-   0x08048ef8 <+56>:    e8 83 b7 00 00  call   0x8054680 <getegid>
-   0x08048efd <+61>:    89 44 24 1c     mov    %eax,0x1c(%esp)
-   0x08048f01 <+65>:    e8 6a b7 00 00  call   0x8054670 <geteuid>
-   0x08048f06 <+70>:    89 44 24 18     mov    %eax,0x18(%esp)
-   0x08048f0a <+74>:    8b 44 24 1c     mov    0x1c(%esp),%eax
-   0x08048f0e <+78>:    89 44 24 08     mov    %eax,0x8(%esp)
-   0x08048f12 <+82>:    8b 44 24 1c     mov    0x1c(%esp),%eax
-   0x08048f16 <+86>:    89 44 24 04     mov    %eax,0x4(%esp)
-   0x08048f1a <+90>:    8b 44 24 1c     mov    0x1c(%esp),%eax
-   0x08048f1e <+94>:    89 04 24        mov    %eax,(%esp)
-   0x08048f21 <+97>:    e8 da b7 00 00  call   0x8054700 <setresgid>
-   0x08048f26 <+102>:   8b 44 24 18     mov    0x18(%esp),%eax
-   0x08048f2a <+106>:   89 44 24 08     mov    %eax,0x8(%esp)
-   0x08048f2e <+110>:   8b 44 24 18     mov    0x18(%esp),%eax
-   0x08048f32 <+114>:   89 44 24 04     mov    %eax,0x4(%esp)
-   0x08048f36 <+118>:   8b 44 24 18     mov    0x18(%esp),%eax
-   0x08048f3a <+122>:   89 04 24        mov    %eax,(%esp)
-   0x08048f3d <+125>:   e8 4e b7 00 00  call   0x8054690 <setresuid>
-   0x08048f42 <+130>:   8d 44 24 10     lea    0x10(%esp),%eax
-   0x08048f46 <+134>:   89 44 24 04     mov    %eax,0x4(%esp)
-   0x08048f4a <+138>:   c7 04 24 48 53 0c 08    movl   $0x80c5348,(%esp)
+   0x08048ed9 <+25>:    cmp    eax,0x1a7
+   0x08048ede <+30>:    jne    0x8048f58 <main+152># it says to jump to <main+152> if the arg is not $0x1a7
+   0x08048ee0 <+32>:    mov    DWORD PTR [esp],0x80c5348
+   0x08048ee7 <+39>:    call   0x8050bf0 <strdup>
+   0x08048eec <+44>:    mov    DWORD PTR [esp+0x10],eax
+   0x08048ef0 <+48>:    mov    DWORD PTR [esp+0x14],0x0
+   0x08048ef8 <+56>:    call   0x8054680 <getegid>
+   0x08048efd <+61>:    mov    DWORD PTR [esp+0x1c],eax
+   0x08048f01 <+65>:    call   0x8054670 <geteuid>
+   0x08048f06 <+70>:    mov    DWORD PTR [esp+0x18],eax
+   0x08048f0a <+74>:    mov    eax,DWORD PTR [esp+0x1c]
+   0x08048f0e <+78>:    mov    DWORD PTR [esp+0x8],eax
+   0x08048f12 <+82>:    mov    eax,DWORD PTR [esp+0x1c]
+   0x08048f16 <+86>:    mov    DWORD PTR [esp+0x4],eax
+   0x08048f1a <+90>:    mov    eax,DWORD PTR [esp+0x1c]
+   0x08048f1e <+94>:    mov    DWORD PTR [esp],eax
+   0x08048f21 <+97>:    call   0x8054700 <setresgid>
+   0x08048f26 <+102>:   mov    eax,DWORD PTR [esp+0x18]
+   0x08048f2a <+106>:   mov    DWORD PTR [esp+0x8],eax
+   0x08048f2e <+110>:   mov    eax,DWORD PTR [esp+0x18]
+   0x08048f32 <+114>:   mov    DWORD PTR [esp+0x4],eax
+   0x08048f36 <+118>:   mov    eax,DWORD PTR [esp+0x18]
+   0x08048f3a <+122>:   mov    DWORD PTR [esp],eax
+   0x08048f3d <+125>:   call   0x8054690 <setresuid>
+   0x08048f42 <+130>:   lea    eax,[esp+0x10]
+   0x08048f46 <+134>:   mov    DWORD PTR [esp+0x4],eax
+   0x08048f4a <+138>:   mov    DWORD PTR [esp],0x80c5348
 
 # call execve to execute command if input is correct ($0x1a7)
-   0x08048f51 <+145>:   e8 ea b6 00 00  call   0x8054640 <execv>
-   0x08048f56 <+150>:   eb 28   jmp    0x8048f80 <main+192>
+   0x08048f51 <+145>:   call   0x8054640 <execv>
+   0x08048f56 <+150>:   jmp    0x8048f80 <main+192>
 
 # in case where arg's not $0x1a7, it writes "No !" in stderr
-   0x08048f58 <+152>:   a1 70 e1 0e 08  mov    0x80ee170,%eax
-   0x08048f5d <+157>:   89 c2   mov    %eax,%edx
-   0x08048f5f <+159>:   b8 50 53 0c 08  mov    $0x80c5350,%eax
-   0x08048f64 <+164>:   89 54 24 0c     mov    %edx,0xc(%esp)
-   0x08048f68 <+168>:   c7 44 24 08 05 00 00 00 movl   $0x5,0x8(%esp)
-   0x08048f70 <+176>:   c7 44 24 04 01 00 00 00 movl   $0x1,0x4(%esp)
-   0x08048f78 <+184>:   89 04 24        mov    %eax,(%esp)
-   0x08048f7b <+187>:   e8 b0 12 00 00  call   0x804a230 <fwrite>
-   0x08048f80 <+192>:   b8 00 00 00 00  mov    $0x0,%eax
-   0x08048f85 <+197>:   c9      leave  
-   0x08048f86 <+198>:   c3      ret    
+   0x08048f58 <+152>:   mov    eax,ds:0x80ee170
+   0x08048f5d <+157>:   mov    edx,eax
+   0x08048f5f <+159>:   mov    eax,0x80c5350
+   0x08048f64 <+164>:   mov    DWORD PTR [esp+0xc],edx
+   0x08048f68 <+168>:   mov    DWORD PTR [esp+0x8],0x5
+   0x08048f70 <+176>:   mov    DWORD PTR [esp+0x4],0x1
+   0x08048f78 <+184>:   mov    DWORD PTR [esp],eax
+   0x08048f7b <+187>:   call   0x804a230 <fwrite>
+   0x08048f80 <+192>:   mov    eax,0x0
+   0x08048f85 <+197>:   leave  
+   0x08048f86 <+198>:   ret    
 End of assembler dump.
+
 (gdb) quit
 
-# get the value of 0x1a7 using bc
+# get the value of 0x1a7 using bc || just use p/d 0x1a7 on gdb to get the value
 level0@RainFall:~$ echo "ibase=16; 1A7" | bc
 423
 
@@ -165,5 +169,6 @@ $ su level1
 Password: 
 RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
 No RELRO        No canary found   NX disabled   No PIE          No RPATH   No RUNPATH   /home/user/level1/level1
-level1@RainFall:~$ 
+level1@RainFall:~$
+
 ```
