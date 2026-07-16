@@ -48,5 +48,33 @@ level1@RainFall:~$ ./level1 "13213"
 # NX is disabled, which means we can execute code on the stacklevel1@RainFall:~$ checksec --file /home/user/level1/level1
 RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
 No RELRO        No canary found   NX disabled   No PIE          No RPATH   No RUNPATH   /home/user/level1/level1
-level1@RainFall:~$ 
+level1@RainFall:~$ nm ./level1 
+-bash: /usr/bin/nm: Input/output error
+
+# Go through main
+level1@RainFall:~$ gdb --args level1 
+GNU gdb (Ubuntu/Linaro 7.4-2012.04-0ubuntu2.1) 7.4-2012.04
+Copyright (C) 2012 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i686-linux-gnu".
+For bug reporting instructions, please see:
+<http://bugs.launchpad.net/gdb-linaro/>...
+Reading symbols from /home/user/level1/level1...(no debugging symbols found)...done.
+(gdb) set disassembly-flavor intel 
+(gdb) disassemble main
+Dump of assembler code for function main:
+   0x08048480 <+0>:     push   ebp
+   0x08048481 <+1>:     mov    ebp,esp
+   0x08048483 <+3>:     and    esp,0xfffffff0
+   0x08048486 <+6>:     sub    esp,0x50
+   0x08048489 <+9>:     lea    eax,[esp+0x10]
+   0x0804848d <+13>:    mov    DWORD PTR [esp],eax
+   0x08048490 <+16>:    call   0x8048340 <gets@plt>
+   0x08048495 <+21>:    leave  
+   0x08048496 <+22>:    ret    
+End of assembler dump.
+(gdb)
 ```
